@@ -1,0 +1,9 @@
+if (r->Header->Type != 1 && r->Header->Type != 2 && r->Header->Type != 3 ){
+  return -1;
+}
+
+if (r->Header->Type == 2){
+
+}else if(r->Header->Type ==3){
+
+}
