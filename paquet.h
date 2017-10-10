@@ -34,6 +34,7 @@ struct record {
 */
 int record_init(struct record *r);
 
+
 /*
 *Libération du paquet
 */

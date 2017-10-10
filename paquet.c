@@ -1,4 +1,3 @@
-#include "paquet.h"
 #include <stdint.h>
 #include <stdlib.h>
 #ifndef _MATRIX_H
@@ -23,7 +22,7 @@ struct record {
     struct  header * Header;
     unsigned int Timestamp;
     unsigned int CRC1;
-    unsigned char Payload;
+    unsigned char * Payload;
     unsigned int CRC2;
 };
 
@@ -34,6 +33,7 @@ int record_init(  unsigned int Type:2,unsigned int TR:1,unsigned int Window:5,un
 
   struct record * r = (struct record *) malloc (sizeof(struct record));
   r->Header = (struct header *) malloc (sizeof(struct header));
+  r->Payload =  malloc (sizeof(512));
   if(r->Header==NULL)
   {
       return -1;
@@ -57,8 +57,9 @@ int record_init(  unsigned int Type:2,unsigned int TR:1,unsigned int Window:5,un
 */
 void record_free(struct record *r)
 {
-    if(r->Header->Length!=0)
-        free(r->Payload);
+      free(r->Header);
+      free(r->Payload);
+      free(r);
 }
 
 /**
