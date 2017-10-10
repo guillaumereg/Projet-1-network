@@ -1,8 +1,5 @@
 #include <stdint.h>
 #include <stdlib.h>
-#ifndef _MATRIX_H
-#define _MATRIX_H
-
 
 /* struct header
  * Structure représentant l'entête d'un paquet
@@ -29,7 +26,7 @@ struct record {
 /*
 * création d'un paquet de données
 */
-int record_init(  unsigned int Type:2,unsigned int TR:1,unsigned int Window:5,unsigned int Seqnum:8,unsigned int Length:16;unsigned int Timestamp,unsigned int CRC1,unsigned char Payload,unsigned int CRC2;){
+int record_init(  unsigned int Type,unsigned int TR,unsigned int Window,unsigned int Seqnum,unsigned int Length,unsigned int Timestamp,unsigned int CRC1,unsigned char * Payload,unsigned int CRC2){
 
   struct record * r = (struct record *) malloc (sizeof(struct record));
   r->Header = (struct header *) malloc (sizeof(struct header));
@@ -69,7 +66,7 @@ void record_free(struct record *r)
 int record_get_type(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->Header->Type;
 }
@@ -81,7 +78,7 @@ int record_get_type(const struct record *r)
 int record_get_TR(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->Header->TR;
 }
@@ -93,7 +90,7 @@ int record_get_TR(const struct record *r)
 int record_get_Window(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->Header->Window;
 }
@@ -102,9 +99,9 @@ int record_get_Window(const struct record *r)
  * Modifie le Window d'un enregistrement
  * @pre: r != NULL && Window !=NULL
  */
-void record_set_Window(const struct record *r,   unsigned int Window:5)
+void record_set_Window(const struct record *r,   unsigned int Window)
 {
-  if (r != NULL && Window != NULL){
+  if (r != NULL ){
     r->Header->Window=Window;
   }
 }
@@ -116,7 +113,7 @@ void record_set_Window(const struct record *r,   unsigned int Window:5)
 int record_get_Seqnum(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->Header->Seqnum;
 }
@@ -125,9 +122,9 @@ int record_get_Seqnum(const struct record *r)
  * Modifie le Seqnum d'un enregistrement
  * @pre: r != NULL && Seqnum!=NULL
  */
-void record_set_Seqnum(const struct record *r,  unsigned int Seqnum:8)
+void record_set_Seqnum(const struct record *r,  unsigned int Seqnum)
 {
-  if (r != NULL && Seqnum!= NULL){
+  if (r != NULL ){
     r->Header->Seqnum=Seqnum;
   }
 }
@@ -139,7 +136,7 @@ void record_set_Seqnum(const struct record *r,  unsigned int Seqnum:8)
 int record_get_Length(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->Header->Length;
 }
@@ -151,7 +148,7 @@ int record_get_Length(const struct record *r)
 int record_get_Timestamp(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->Timestamp;
 }
@@ -162,7 +159,7 @@ int record_get_Timestamp(const struct record *r)
  */
 void record_set_Timestamp(const struct record *r,  unsigned int Timestamp)
 {
-  if (r != NULL && Timestamp!= NULL){
+  if (r != NULL ){
     r->Timestamp=Timestamp;
   }
 }
@@ -174,7 +171,7 @@ void record_set_Timestamp(const struct record *r,  unsigned int Timestamp)
 int record_get_CRC1(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->CRC1;
 }
@@ -185,7 +182,7 @@ int record_get_CRC1(const struct record *r)
  */
 void record_set_CRC1(const struct record *r,  unsigned int CRC1)
 {
-  if (r != NULL && CRC1!= NULL){
+  if (r != NULL ){
     r->CRC1=CRC1;
   }
 }
@@ -197,7 +194,7 @@ void record_set_CRC1(const struct record *r,  unsigned int CRC1)
 char record_get_Payload(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->Payload;
 }
@@ -206,10 +203,10 @@ char record_get_Payload(const struct record *r)
  * Modifie le PAyload d'un enregistrement
  * @pre: r != NULL && Payload!=NULL
  */
-void record_set_Payload(const struct record *r,  unsigned int Payload)
+void record_set_Payload(const struct record *r,  unsigned char * Payload)
 {
   if (r != NULL && Payload!= NULL){
-    r->CRC1=Payload;
+    r->Payload= Payload;
   }
 }
 /**
@@ -219,7 +216,7 @@ void record_set_Payload(const struct record *r,  unsigned int Payload)
 int record_get_CRC2(const struct record *r)
 {
   if (r == NULL ){
-    return NULL;
+    return -1;
   }
   return r->CRC2;
 }
@@ -230,7 +227,7 @@ int record_get_CRC2(const struct record *r)
  */
 void record_set_CRC2(const struct record *r,  unsigned int CRC2)
 {
-  if (r != NULL && CRC2!= NULL){
+  if (r != NULL ){
     r->CRC2=CRC2;
   }
 }
