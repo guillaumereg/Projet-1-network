@@ -26,12 +26,12 @@ struct record {
 /*
 * création d'un paquet de données
 */
-int record_init(  unsigned int type,unsigned int tr,unsigned int window,unsigned int seqnum,unsigned int length,unsigned int timestamp,unsigned int crc1,unsigned char * payload,unsigned int crc2){
+int record_init(struct record *r ,unsigned int type,unsigned int tr,unsigned int window,unsigned int seqnum,unsigned int length,unsigned int timestamp,unsigned int crc1,unsigned char * payload,unsigned int crc2){
 
-  struct record * r = (struct record *) malloc (sizeof(struct record));
+  r = (struct record *) malloc (sizeof(struct record));
   r->header = (struct header *) malloc (sizeof(struct header));
   r->payload =  malloc (sizeof(512));
-  if(r->header==NULL)
+  if(r==NULL || r->header==NULL || r->payload==NULL )
   {
       return -1;
   }
