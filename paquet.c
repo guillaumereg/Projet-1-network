@@ -1,37 +1,25 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "paquet.h"
 /* struct header
  * Structure représentant l'entête d'un paquet
  */
-struct header{
-    unsigned int type:2;
-    unsigned int tr:1;
-    unsigned int window:5;
-    unsigned int seqnum:8;
-    unsigned int length:16;
-};
 
-/* struct record
- * Structure représentant un paquet
- */
-struct record {
-    struct  header * header;
-    unsigned int timestamp;
-    unsigned int crc1;
-    unsigned char * payload;
-    unsigned int crc2;
-};
 
 /*
 * création d'un paquet de données
 */
-int record_init(struct record *r ,unsigned int type,unsigned int tr,unsigned int window,unsigned int seqnum,unsigned int length,unsigned int timestamp,unsigned int crc1,unsigned char * payload,unsigned int crc2){
+int record_init(struct record *r ,unsigned int type,unsigned int tr,unsigned int window,unsigned int seqnum,unsigned int length,unsigned int timestamp,unsigned int crc1,char * payload, unsigned int crc2){
 
   r = (struct record *) malloc (sizeof(struct record));
-  r->header = (struct header *) malloc (sizeof(struct header));
-  r->payload =  malloc (sizeof(512));
-  if(r==NULL || r->header==NULL || r->payload==NULL )
+  if(r==NULL)
+  {
+      return -1;
+  }
+
+  r->payload =  (char*) malloc (length);
+  if(r->payload==NULL )
   {
       return -1;
   }
@@ -54,7 +42,6 @@ int record_init(struct record *r ,unsigned int type,unsigned int tr,unsigned int
 */
 void record_free(struct record *r)
 {
-      free(r->header);
       free(r->payload);
       free(r);
 }
@@ -75,7 +62,7 @@ int record_get_type(const struct record *r)
  * Renvoie le TR d'un enregistrement
  * @pre: r != NULL
  */
-int record_get_TR(const struct record *r)
+int record_get_tr(const struct record *r)
 {
   if (r == NULL ){
     return -1;
@@ -99,7 +86,7 @@ int record_get_Window(const struct record *r)
  * Modifie le Window d'un enregistrement
  * @pre: r != NULL && Window !=NULL
  */
-void record_set_Window(struct record *r,   unsigned int window)
+void record_set_window(struct record *r, unsigned int window)
 {
   if (r != NULL ){
     r->header->window=window;
@@ -110,7 +97,7 @@ void record_set_Window(struct record *r,   unsigned int window)
  * Renvoie le Seqnum d'un enregistrement
  * @pre: r != NULL
  */
-int record_get_Seqnum(const struct record *r)
+int record_get_seqnum(const struct record *r)
 {
   if (r == NULL ){
     return -1;
@@ -122,7 +109,7 @@ int record_get_Seqnum(const struct record *r)
  * Modifie le Seqnum d'un enregistrement
  * @pre: r != NULL && Seqnum!=NULL
  */
-void record_set_Seqnum(struct record *r,  unsigned int seqnum)
+void record_set_seqnum(struct record *r,  unsigned int seqnum)
 {
   if (r != NULL ){
     r->header->seqnum=seqnum;
@@ -133,7 +120,7 @@ void record_set_Seqnum(struct record *r,  unsigned int seqnum)
  * Renvoie le Length d'un enregistrement
  * @pre: r != NULL
  */
-int record_get_Length(const struct record *r)
+int record_get_length(const struct record *r)
 {
   if (r == NULL ){
     return -1;
@@ -145,7 +132,7 @@ int record_get_Length(const struct record *r)
  * Renvoie le Timestamp d'un enregistrement
  * @pre: r != NULL
  */
-int record_get_Timestamp(const struct record *r)
+int record_get_timestamp(const struct record *r)
 {
   if (r == NULL ){
     return -1;
@@ -157,7 +144,7 @@ int record_get_Timestamp(const struct record *r)
  * Modifie le Timestamp d'un enregistrement
  * @pre: r != NULL && Timestamp!=NULL
  */
-void record_set_Timestamp(struct record *r,  unsigned int timestamp)
+void record_set_timestamp(struct record *r,  unsigned int timestamp)
 {
   if (r != NULL ){
     r->timestamp=timestamp;
@@ -168,7 +155,7 @@ void record_set_Timestamp(struct record *r,  unsigned int timestamp)
  * Renvoie le CRC1 d'un enregistrement
  * @pre: r != NULL
  */
-int record_get_CRC1(const struct record *r)
+int record_get_crc1(const struct record *r)
 {
   if (r == NULL ){
     return -1;
@@ -180,7 +167,7 @@ int record_get_CRC1(const struct record *r)
  * Modifie le CRC1 d'un enregistrement
  * @pre: r != NULL && CRC1!=NULL
  */
-void record_set_CRC1(struct record *r,  unsigned int crc1)
+void record_set_crc1(struct record *r,  unsigned int crc1)
 {
   if (r != NULL ){
     r->crc1=crc1;
@@ -191,7 +178,7 @@ void record_set_CRC1(struct record *r,  unsigned int crc1)
  * Renvoie le Payload d'un enregistrement
  * @pre: r != NULL
  */
-char * record_get_Payload(const struct record *r)
+char* record_get_payload(const struct record *r)
 {
   if (r == NULL ){
     return NULL;
@@ -203,7 +190,7 @@ char * record_get_Payload(const struct record *r)
  * Modifie le PAyload d'un enregistrement
  * @pre: r != NULL && Payload!=NULL
  */
-void record_set_Payload(struct record *r,  unsigned char * payload)
+void record_set_payload(struct record *r, char * payload)
 {
   if (r != NULL && payload!= NULL){
     r->payload= payload;
@@ -213,7 +200,7 @@ void record_set_Payload(struct record *r,  unsigned char * payload)
  * Renvoie le CRC2 d'un enregistrement
  * @pre: r != NULL
  */
-int record_get_CRC2(const struct record *r)
+int record_get_crc2(const struct record *r)
 {
   if (r == NULL ){
     return -1;
@@ -225,7 +212,7 @@ int record_get_CRC2(const struct record *r)
  * Modifie le CRC1 d'un enregistrement
  * @pre: r != NULL && CRC1!=NULL
  */
-void record_set_CRC2(struct record *r,  unsigned int crc2)
+void record_set_crc2(struct record *r,  unsigned int crc2)
 {
   if (r != NULL ){
     r->crc2=crc2;
