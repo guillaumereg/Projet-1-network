@@ -52,6 +52,19 @@ int record_get_type(const struct record *r)
 }
 
 /**
+ * Change le type d'un enregistrement
+ * @pre: r != NULL
+ */
+int record_set_type(struct record *r, unsigned int type)
+{
+  if (r != NULL ){
+    r->header->type=type;
+    return 0;
+  }
+  return -1;
+}
+
+/**
  * Renvoie le TR d'un enregistrement
  * @pre: r != NULL
  */

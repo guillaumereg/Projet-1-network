@@ -40,6 +40,13 @@ void record_free(struct record *r);
 int record_get_type(const struct record *r);
 
 /**
+ * Change le type d'un enregistrement
+ * @pre: r != NULL
+ */
+int record_set_type(const struct record *r,unsigned int type);
+
+
+/**
  * Renvoie le TR d'un enregistrement
  * @pre: r != NULL
  */
