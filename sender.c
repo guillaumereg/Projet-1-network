@@ -20,7 +20,7 @@ int main(int argc, char **argv){
   int length=0;
   int tr=0;
 
-  while ( (c = getopt(argc, argv, "a:s:m:d:ID")) != -1 ) {
+  while ( (c = getopt(argc, argv, "type:tr:seqnum:length:")) != -1 ) {
       switch ( c ) {
           case 'type':
             if(atoi(optarg) != 2 && atoi(optarg) !=3){
