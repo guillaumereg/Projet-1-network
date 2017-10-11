@@ -43,7 +43,7 @@ int record_get_type(const struct record *r);
  * Change le type d'un enregistrement
  * @pre: r != NULL
  */
-int record_set_type(const struct record *r,unsigned int type);
+int record_set_type(struct record *r,unsigned int type);
 
 
 /**

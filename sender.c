@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <getopt.h>
 
 #include "paquet.h"
 
@@ -20,9 +21,9 @@ int main(int argc, char **argv){
   int length=0;
   int tr=0;
 
-  while ( (c = getopt(argc, argv, "type:tr:seqnum:length:")) != -1 ) {
+  while ( (c = getopt(argc, argv, "t:tr:s:l:")) != -1 ) {
       switch ( c ) {
-          case 'type':
+          case 't'://type
             if(atoi(optarg) != 2 && atoi(optarg) !=3){
                 c=-1;
             }
@@ -32,11 +33,11 @@ int main(int argc, char **argv){
             else if (atoi(optarg) ==3){
               type = 3;
             }
-          case 'tr':
+          case 'tr'://tr
             if(atoi(optarg) !=0){
                 c=-1;
             }
-          case 'seqnum':
+          case 's'://seqnum
             if(type == 2){
               num = atoi(optarg) +1;
             }
@@ -46,7 +47,7 @@ int main(int argc, char **argv){
             if(num > 255){
               num=0;
             }
-          case 'length':
+          case 'l'://length
             if( atoi(optarg) > 512){
               c=-1;
             }
