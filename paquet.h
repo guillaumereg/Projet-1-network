@@ -27,8 +27,7 @@ struct record {  //32 bytes
 /*
 * création d'un paquet de données
 */
-int record_init(struct record *r ,unsigned int type,unsigned int tr,unsigned int window,unsigned int seqnum,unsigned int length,unsigned int timestamp,unsigned int crc1,char * payload, unsigned int crc2);
-
+int record_init(struct record *r);
 /*
 *Libération du paquet
 */
@@ -56,7 +55,7 @@ int record_get_window(const struct record *r);
  * Modifie le Window d'un enregistrement
  * @pre: r != NULL && Window != NULL
  */
-void record_set_window(struct record *r, unsigned int window);
+int record_set_window(struct record *r, unsigned int window);
 
 /**
  * Renvoie le Seqnum d'un enregistrement
@@ -68,7 +67,7 @@ int record_get_seqnum(const struct record *r);
  * Modifie le Seqnum d'un enregistrement
  * @pre: r != NULL && Seqnum!=NULL
  */
-void record_set_seqnum(struct record *r,  unsigned int seqnum);
+int record_set_seqnum(struct record *r,  unsigned int seqnum);
 
 /**
  * Renvoie le Length d'un enregistrement
@@ -86,7 +85,7 @@ int record_get_timestamp(const struct record *r);
  * Modifie le Timestamp d'un enregistrement
  * @pre: r != NULL && Timestamp!=NULL
  */
-void record_set_timestamp(struct record *r,  unsigned int timestamp);
+int record_set_timestamp(struct record *r,  unsigned int timestamp);
 
 /**
  * Renvoie le CRC1 d'un enregistrement
@@ -98,7 +97,7 @@ int record_get_crc1(const struct record *r);
  * Modifie le CRC1 d'un enregistrement
  * @pre: r != NULL && CRC1!=NULL
  */
-void record_set_crc1(struct record *r,  unsigned int crc1);
+int record_set_crc1(struct record *r,  unsigned int crc1);
 
 /**
  * Renvoie le Payload d'un enregistrement
@@ -110,7 +109,7 @@ char * record_get_payload(const struct record *r);
  * Modifie le Payload d'un enregistrement
  * @pre: r != NULL && Payload!=NULL
  */
-void record_set_payload(struct record *r, char * payload);
+int record_set_payload(struct record *r, const char * buf, int n);
 
 /**
  * Renvoie le CRC2 d'un enregistrement
@@ -122,6 +121,6 @@ int record_get_crc2(const struct record *r);
  * Modifie le CRC2 d'un enregistrement
  * @pre: r != NULL && CRC2!=NULL
  */
-void record_set_crc2(struct record *r,  unsigned int crc2);
+int record_set_crc2(struct record *r,  unsigned int crc2);
 
 #endif
