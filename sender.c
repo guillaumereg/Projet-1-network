@@ -21,7 +21,7 @@ int main(int argc, char **argv){
   int length=0;
   int tr=0;
 
-  while ( (c = getopt(argc, argv, "t:tr:s:l:")) != -1 ) {
+  while ( (c = getopt(argc, argv, "t:T:s:l:")) != -1 ) {
       switch ( c ) {
           case 't'://type
             if(atoi(optarg) != 2 && atoi(optarg) !=3){
@@ -33,7 +33,7 @@ int main(int argc, char **argv){
             else if (atoi(optarg) ==3){
               type = 3;
             }
-          case 'tr'://tr
+          case 'T'://tr
             if(atoi(optarg) !=0){
                 c=-1;
             }
