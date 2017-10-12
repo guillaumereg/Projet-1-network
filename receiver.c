@@ -1,7 +1,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <getopt.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "paquet.h"
 
@@ -11,8 +19,8 @@ int main(int argc, char **argv){
     int option = 0;
     int filePresent = 0;
     char* filename = NULL;
-    char* node;  //www.qqch.com ou IPv6
-    char* service; //http ou numero port
+    char* hostname;
+    char* portname;
 
     while ((option = getopt(argc, argv,"f:")) != -1) {
       switch (option) {
@@ -23,14 +31,14 @@ int main(int argc, char **argv){
         }
     }
     if(filePresent == 1){
-      printf("end getopt, filePresent: %d filename: %s\n", filePresent, filename);
-      node = *(argv+3);
-      service = *(argv+4);
+      hostname = *(argv+3);
+      portname = *(argv+4);
+      printf("filePresent: %d filename: %s\n", filePresent, filename);
     }
     else{
-      node = *(argv+1);
-      service = *(argv+2);
+      hostname = *(argv+1);
+      portname = *(argv+2);
     }
-    printf("node: %s service: %s\n", node, service);
-
+    printf("hostname: %s portname: %s\n", hostname, portname);
+    return 0;
 }

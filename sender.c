@@ -1,7 +1,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <getopt.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "paquet.h"
 
@@ -32,8 +40,8 @@ int main(int argc, char **argv){
   int option = 0;
   int filePresent = 0;
   char* filename = NULL;
-  char* node;  //www.qqch.com ou IPv6
-  char* service; //http ou numero port
+  char* hostname;  //www.qqch.com ou IPv6
+  char* portname; //http ou numero port
 
   while ((option = getopt(argc, argv,"f:")) != -1) {
     switch (option) {
@@ -44,13 +52,58 @@ int main(int argc, char **argv){
       }
   }
   if(filePresent == 1){  //position fixe = argv[1] ?
-    node = *(argv+3);
-    service = *(argv+4);
+    hostname = *(argv+3);
+    portname = *(argv+4);
+    printf("filePresent: %d filename: %s\n", filePresent, filename);
   }
   else{
-    node = *(argv+1);
-    service = *(argv+2);
+    hostname = *(argv+1);
+    portname = *(argv+2);
   }
+  printf("hostname: %s portname: %s\n", hostname, portname);
+
+  //-------------------------------------------------------------------
+
+  struct addrinfo hints;
+  struct addrinfo* res;
+  int err, fd, numbytes;
+  char *datagram;
+  datagram = "test bro\0";
+  memset(&hints,0,sizeof(hints));
+  hints.ai_family=AF_INET6; //IPv6
+  hints.ai_socktype=SOCK_DGRAM;
+  hints.ai_protocol=0;
+  hints.ai_flags=AI_PASSIVE;  //my ip
+  if((err=getaddrinfo(hostname,portname,&hints,&res)) != 0){
+    fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(err));
+    exit(1);
+  }
+  if((fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol) != 0)){
+    fprintf(stderr, "socket error %s\n", gai_strerror(fd));
+    exit(1);
+  }
+  if ((numbytes = sendto(fd,datagram,sizeof(datagram),0,res->ai_addr,res->ai_addrlen))==-1) {
+    fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
+    exit(1);
+  }
+
+  char ip6[INET6_ADDRSTRLEN];
+  struct in6_addr addr = ((struct sockaddr_in6*)(res->ai_addr))->sin6_addr;
+  printf("hostname: %s: ntop: %s\n", hostname, inet_ntop(AF_INET6, &addr, ip6, INET6_ADDRSTRLEN));
+  //printf("sent %d bytes to %s\n", numbytes, res->ai_addr.sa_family); //in_addr->
+  printf("sent\n");
+  //close(fd);
+
+
+
+
+
+
+
+
+
+
+
 
   return 0;
 }

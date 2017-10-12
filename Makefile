@@ -1,5 +1,5 @@
 GCC = gcc
-CFLAGS = -Wall -std=c99 -g -c
+CFLAGS = -Wall -std=c99 -g -c -D_POSIX_C_SOURCE=200112L
 
 all: sender receiver clean
 
