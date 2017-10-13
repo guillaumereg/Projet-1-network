@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "paquet.h"
 
@@ -64,24 +65,27 @@ int main(int argc, char **argv){
 
   //-------------------------------------------------------------------
 
-  struct addrinfo hints;
-  struct addrinfo* res;
+  struct addrinfo hints, *res;
   int err, fd, numbytes;
   char *datagram;
   datagram = "test bro\0";
   memset(&hints,0,sizeof(hints));
   hints.ai_family=AF_INET6; //IPv6
   hints.ai_socktype=SOCK_DGRAM;
-  hints.ai_protocol=0;
+  hints.ai_protocol=IPPROTO_UDP; //udp
   hints.ai_flags=AI_PASSIVE;  //my ip
+
   if((err=getaddrinfo(hostname,portname,&hints,&res)) != 0){
     fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(err));
     exit(1);
   }
-  if((fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol) != 0)){
+
+  if((fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol)) ==-1){
     fprintf(stderr, "socket error %s\n", gai_strerror(fd));
     exit(1);
   }
+
+
   if ((numbytes = sendto(fd,datagram,sizeof(datagram),0,res->ai_addr,res->ai_addrlen))==-1) {
     fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
     exit(1);
@@ -90,9 +94,9 @@ int main(int argc, char **argv){
   char ip6[INET6_ADDRSTRLEN];
   struct in6_addr addr = ((struct sockaddr_in6*)(res->ai_addr))->sin6_addr;
   printf("hostname: %s: ntop: %s\n", hostname, inet_ntop(AF_INET6, &addr, ip6, INET6_ADDRSTRLEN));
-  //printf("sent %d bytes to %s\n", numbytes, res->ai_addr.sa_family); //in_addr->
+  printf("sent %d bytes to %s\n", numbytes, ip6);
   printf("sent\n");
-  //close(fd);
+  close(fd);
 
 
 
