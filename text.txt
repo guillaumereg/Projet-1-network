@@ -1,1 +1,3 @@
-hello my name is guillaume 
+hostname: :: portname: 12345
+received 5 bytes from ::1 with port 12345
+buffer = test

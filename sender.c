@@ -58,8 +58,8 @@ int main(int argc, char **argv){
     printf("filePresent: %d filename: %s\n", filePresent, filename);
   }
   else{
-    hostname = *(argv+1);
-    portname = *(argv+2);
+    hostname = *(argv+1);   //adresse ip du receiver
+    portname = *(argv+2);   //port sur lequel receiver recoit
   }
   printf("hostname: %s portname: %s\n", hostname, portname);
 
@@ -67,13 +67,12 @@ int main(int argc, char **argv){
 
   struct addrinfo hints, *res;
   int err, fd, numbytes;
-  char *datagram;
-  datagram = "test bro\0";
+  char datagram[5] = "test\0";
   memset(&hints,0,sizeof(hints));
   hints.ai_family=AF_INET6; //IPv6
   hints.ai_socktype=SOCK_DGRAM;
   hints.ai_protocol=IPPROTO_UDP; //udp
-  hints.ai_flags=AI_PASSIVE;  //my ip
+  hints.ai_flags=AI_ADDRCONFIG;
 
   if((err=getaddrinfo(hostname,portname,&hints,&res)) != 0){
     fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(err));
@@ -94,8 +93,9 @@ int main(int argc, char **argv){
   char ip6[INET6_ADDRSTRLEN];
   struct in6_addr addr = ((struct sockaddr_in6*)(res->ai_addr))->sin6_addr;
   printf("hostname: %s: ntop: %s\n", hostname, inet_ntop(AF_INET6, &addr, ip6, INET6_ADDRSTRLEN));
-  printf("sent %d bytes to %s\n", numbytes, ip6);
-  printf("sent\n");
+  printf("sent %d bytes to %s to port %s\n", numbytes, ip6, portname);
+
+  freeaddrinfo(res);
   close(fd);
 
 
