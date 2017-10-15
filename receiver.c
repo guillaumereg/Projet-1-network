@@ -103,7 +103,7 @@ int main(int argc, char **argv){
           strcpy(receverOctet, ""); //chaine "nulle"
           if ((numbytes = recvfrom(fd, receverOctet, sizeof(receverOctet), 0,(struct sockaddr *)&src_addr, &src_addr_len)) == -1) {
             fprintf(stderr, "recvfrom error %s\n", gai_strerror(fd));
-            exit(1);
+           exit(1);
           }
         }
 

@@ -92,7 +92,6 @@ int main(int argc, char **argv){
   }
 
 
-
   // région expérimentale
   if(filePresent == 1 ){
 
@@ -100,6 +99,7 @@ int main(int argc, char **argv){
         char octetActu ;
         char listeOctet[512];
         int nbrOctet=0;
+        int nbrOctetTotal=0;
 
 
         lectureFichier = fopen(filename, "rb");
@@ -114,6 +114,7 @@ int main(int argc, char **argv){
         {
             listeOctet[nbrOctet]=octetActu;
             nbrOctet++;
+            nbrOctetTotal++;
 
             if(nbrOctet == 512){
 
@@ -134,6 +135,7 @@ int main(int argc, char **argv){
           exit(1);
         }
 
+        numbytes=nbrOctetTotal;
         fclose(lectureFichier);
         filePresent=0;
     }
