@@ -25,7 +25,8 @@ int main(int argc, char **argv){
 
   while ((option = getopt(argc, argv,"f:")) != -1) {
     switch (option) {
-      case 'f' : filename = optarg;
+      case 'f' :
+        filename = optarg;
         filePresent = 1;
         break;
       default: break;
@@ -78,6 +79,38 @@ int main(int argc, char **argv){
     fprintf(stderr, "recvfrom error %s\n", gai_strerror(fd));
     exit(1);
   }
+
+  // région expérimentale
+  if(filePresent == 1 ){
+
+        FILE *ecritureFichier = NULL;
+        char receverOctet[512];
+
+        ecritureFichier = fopen(filename, "wb");
+
+        if(ecritureFichier == NULL)
+        {
+            exit(1);
+        }
+
+        if ((numbytes = recvfrom(fd, receverOctet, sizeof(receverOctet), 0,(struct sockaddr *)&src_addr, &src_addr_len)) == -1) {
+          fprintf(stderr, "recvfrom error %s\n", gai_strerror(fd));
+          exit(1);
+        }
+
+        while(numbytes!=0){
+          fputs(receverOctet,ecritureFichier);
+          strcpy(receverOctet, ""); //chaine "nulle"
+          if ((numbytes = recvfrom(fd, receverOctet, sizeof(receverOctet), 0,(struct sockaddr *)&src_addr, &src_addr_len)) == -1) {
+            fprintf(stderr, "recvfrom error %s\n", gai_strerror(fd));
+            exit(1);
+          }
+        }
+
+        fclose(ecritureFichier);
+        filePresent=0;
+    }
+
 
   char ip6[INET6_ADDRSTRLEN];
   struct in6_addr addr = ((struct sockaddr_in6*)(&src_addr))->sin6_addr;

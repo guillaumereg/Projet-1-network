@@ -46,7 +46,8 @@ int main(int argc, char **argv){
 
   while ((option = getopt(argc, argv,"f:")) != -1) {
     switch (option) {
-      case 'f' : filename = optarg;
+      case 'f' :
+        filename = optarg;
         filePresent = 1;
         break;
       default: break;
@@ -90,6 +91,55 @@ int main(int argc, char **argv){
     exit(1);
   }
 
+
+
+  // région expérimentale
+  if(filePresent == 1 ){
+
+        FILE *lectureFichier = NULL;
+        char octetActu ;
+        char listeOctet[512];
+        int nbrOctet=0;
+
+
+        lectureFichier = fopen(filename, "rb");
+
+        if(lectureFichier == NULL)
+        {
+            exit(1);
+        }
+
+
+        while( fread(&octetActu, 1, sizeof(octetActu), lectureFichier) != 0)
+        {
+            listeOctet[nbrOctet]=octetActu;
+            nbrOctet++;
+
+            if(nbrOctet == 512){
+
+              listeOctet[nbrOctet]='\0';
+              nbrOctet=0;
+
+              if ((numbytes = sendto(fd,listeOctet,sizeof(listeOctet),0,res->ai_addr,res->ai_addrlen))==-1) {
+                fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
+                exit(1);
+              }
+
+              strcpy(listeOctet, ""); //chaine "nulle"
+            }
+        }
+
+        if ((numbytes = sendto(fd,listeOctet,nbrOctet,0,res->ai_addr,res->ai_addrlen))==-1) {
+          fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
+          exit(1);
+        }
+
+        fclose(lectureFichier);
+        filePresent=0;
+    }
+
+
+
   char ip6[INET6_ADDRSTRLEN];
   struct in6_addr addr = ((struct sockaddr_in6*)(res->ai_addr))->sin6_addr;
   printf("hostname: %s: ntop: %s\n", hostname, inet_ntop(AF_INET6, &addr, ip6, INET6_ADDRSTRLEN));
@@ -97,16 +147,6 @@ int main(int argc, char **argv){
 
   freeaddrinfo(res);
   close(fd);
-
-
-
-
-
-
-
-
-
-
 
 
   return 0;

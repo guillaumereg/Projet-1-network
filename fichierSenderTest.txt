@@ -1,0 +1,9 @@
+Ceci est une phrase pour faire des tests. Mais comme on doit envoyer des paquets de 512 octet je vais pas m'amuser à faire qu'un texte construit.
+Nous allons donc bientot perdre toute notion de cohérence. On se retrouve après.zfffffffffffffffffffffffffffff
+f
+zezguhhziufdhliudilgsfliu<gksfdhlskdfjhfdmkhgmdshmfdlhjkmhsfdksgkjdshgfdsghgsdhjfggsdgfgsd
+ggdsdgfhgkhgdjksssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyuuuuuttttt
+
+Normalement d'après mes calculs, c'est à peu près ici qu'il y a une fragmentation car 512 octets
+ont été utilisé, veuillez confirmer.
