@@ -77,35 +77,35 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
 
 
   //prise et verification de type
-    uint8_t type=*header_actu >> 30;
+    int type=*header_actu >> 30;
   	if(type !=1 && type!=2 && type!=3){
       return E_TYPE;
     }
 
   //prise et verification de tr
-    uint8_t  tr1= *header_actu << 2;
-    uint8_t tr = tr1 >> 31;
+    int tr1= *header_actu << 2;
+    int tr = tr1 >> 31;
     if ((type == 2 || type ==3) && tr !=0 ){
       return E_TR;
     }
 
   //prise et verification de window
-    uint8_t window1= *header_actu << 3;
-  	uint8_t window = window1 >> 27;
+    int window1= *header_actu << 3;
+  	int window = window1 >> 27;
   	if(window<0 || window>31){
   		return E_WINDOW;
     }
 
   //prise et verification de seqnum
-    uint8_t seqnum1 = *header_actu << 8;
-  	uint8_t seqnum = seqnum1 >> 26;
+    int seqnum1 = *header_actu << 8;
+  	int seqnum = seqnum1 >> 26;
   	if(seqnum<0 || seqnum>255){
   		return E_SEQNUM;
     }
 
   //prise et verification de length
-    uint16_t length1 = *header_actu << 16;
-    uint16_t length = length1 >> 16;
+    int length1 = *header_actu << 16;
+    int length = length1 >> 16;
     if (length > 512 ){
       return E_LENGTH;
     }
@@ -113,10 +113,13 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
       return E_UNCONSISTENT;
     }
 
+  //prise et verification de timestamp
+    int* timestamp = malloc(4*sizeof(char));
+    memcpy((void *)timestamp, (void *)&data[4], 4);
 
 
   //prise et verification de CRC1
-    int crc_test =0;
+    uint32_t crc_test =0;
     memcpy((void *)&crc_test,(void *)&data[8],4);
 
     uint32_t crc1 = (uint32_t)crc32(0, (const void *)data, 8);
@@ -126,7 +129,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
 
 
   //prise et verification de CRC1
-    int crc_test2 =0;
+    uint32_t crc_test2 =0;
     memcpy((void *)&crc_test2,(void *)&data[len-4],4);
 
     uint32_t crc2 = (uint32_t)crc32(0, (const void *)data, len-4);
@@ -134,7 +137,23 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
         return E_CRC;
     }
 
-    return PKT_OK;
+
+        //création  paquet
+
+      char *payload = malloc(length*sizeof(char)+1);
+      memcpy(payload ,(data+12), length);
+    	pkt_status_code test = PKT_OK;
+    	test = pkt_set_type(pkt, (const uint8_t) type);
+      test = pkt_set_tr(pkt, (const uint8_t) tr);
+    	test = pkt_set_window(pkt, (const uint8_t) window);
+    	test = pkt_set_seqnum(pkt, (const uint8_t) seqnum);
+    	test = pkt_set_length(pkt, (const uint16_t) length);
+      test = pkt_set_timestamp(pkt, (const uint16_t) *timestamp);
+    	test = pkt_set_crc1(pkt, (const uint32_t) crc1);
+    	test = pkt_set_payload(pkt, payload, (const uint16_t) len);
+      test = pkt_set_crc2(pkt, (const uint32_t) crc2);
+
+    return test;
 
 }
 
