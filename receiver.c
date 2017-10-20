@@ -42,62 +42,53 @@ int main(int argc, char **argv){
   printf("hostname: %s portname: %s\n", hostname, portname);
 //-------------------------------------------------------------------------
 
+  //addresse du sender
+  struct addrinfo hints1, *res1;
+  int err1,fd;
+  memset(&hints1,0,sizeof(hints1));
+  hints1.ai_family=AF_INET6; //IPv6
+  hints1.ai_socktype=SOCK_DGRAM;
+  hints1.ai_protocol=IPPROTO_UDP; //udp
 
-//comment faire pour le dernier recvfrom????
-
-
-  //ssize_t bufferLength = 8; //supposont que la taille maximale du buffer est de 8 bytes au lieu de 512
-  //char buffer[bufferLength];
-  if(filePresent == 1){  //enregistrer dans filename
-
-
-  }
-  else{ //utiliser stdout comme output
-
-  }
-/*
-  struct addrinfo hints, *res;
-  int err, fd, numbytes;
-  memset(&hints,0,sizeof(hints));
-  hints.ai_family=AF_INET6; //IPv6
-  hints.ai_socktype=SOCK_DGRAM;
-  hints.ai_protocol=IPPROTO_UDP; //udp
-  hints.ai_flags=AI_PASSIVE; //utiliser mon ip
-
-  if((err=getaddrinfo(hostname, portname,&hints,&res)) != 0){
-    fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(err));
+  if((err1=getaddrinfo(hostname,portname,&hints1,&res1)) != 0){
+    fprintf(stderr, "getaddrinfo 1 error: %s\n", gai_strerror(err1));
     exit(1);
   }
 
-  if((fd=socket(res->ai_family,res->ai_socktype,res->ai_protocol)) ==-1){
+  //creation d'un socket
+  if((fd=socket(res1->ai_family,res1->ai_socktype,res1->ai_protocol)) ==-1){
     fprintf(stderr, "socket error %s\n", gai_strerror(fd));
     exit(1);
   }
 
-//bind: server socket must be bound to a local address before it can listen for inbound datagrams.
-  if (bind(fd,res->ai_addr,res->ai_addrlen)==-1) {
-    fprintf(stderr, "bind error %s\n", gai_strerror(fd));
+  //addresse du receiver
+  struct addrinfo hints2, *res2;
+  int err2;
+  memset(&hints2,0,sizeof(hints2));
+  hints2.ai_family=AF_INET6; //IPv6
+  hints2.ai_socktype=SOCK_DGRAM;
+  hints2.ai_protocol=IPPROTO_UDP; //udp
+  hints2.ai_flags = AI_PASSIVE; //utiliser l'adresse du sender
+
+  if((err2=getaddrinfo(hostname,portname,&hints2,&res2)) != 0){
+    fprintf(stderr, "getaddrinfo 2 error: %s\n", gai_strerror(err2));
     exit(1);
   }
 
-  char buffer[5];
-
-  struct sockaddr_storage src_addr;
-  socklen_t src_addr_len = sizeof(src_addr);
-
-  if ((numbytes = recvfrom(fd, buffer, sizeof(buffer), 0,(struct sockaddr *)&src_addr, &src_addr_len)) == -1) {
-    fprintf(stderr, "recvfrom error %s\n", gai_strerror(fd));
-    exit(1);
+  //lier adresse du receiver au socket
+  if (bind(fd, res2->ai_addr, res2->ai_addrlen)==-1) { 
+      fprintf(stderr, "bind error: %s\n",strerror(errno));
+      return -1;
   }
 
-  char ip6[INET6_ADDRSTRLEN];
-  struct in6_addr addr = ((struct sockaddr_in6*)(&src_addr))->sin6_addr;
-  inet_ntop(AF_INET6, &addr, ip6, INET6_ADDRSTRLEN);
-  printf("received %d bytes from %s with port %s\n", numbytes, ip6, portname);
-  printf("buffer = %s\n", buffer);
-
-  freeaddrinfo(res);
+  //connecte le socket à l'adresse du sender
+  if (connect(fd, res1->ai_addr, res1->ai_addrlen)==-1) {
+      fprintf(stderr, "bind error: %s\n",strerror(errno));
+      return -1;
+  }
+  freeaddrinfo(res1);
+  freeaddrinfo(res2);
   close(fd);
-*/
-    return 0;
+
+  return 0;
 }
