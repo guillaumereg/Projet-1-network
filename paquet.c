@@ -162,45 +162,53 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
 pkt_status_code pkt_encode(const pkt_t* pkt, char *buf, size_t *len)
 {
 
+    int8_t type = pkt_get_type(pkt);
+    if(type!=1 && type!=2 && type!=3)
+    {
+        return E_TYPE;
+    }
+
+    int8_t tr = pkt_get_tr(pkt);
+    if ((type == 2 || type ==3) && tr !=0 ){
+      return E_TR;
+    }
+
+    int8_t window = pkt_get_window(pkt);
+    if(window>31)
+    {
+       return E_WINDOW;
+    }
+
+    int8_t seqnum = pkt_get_seqnum(pkt);
+
     int16_t length = pkt_get_length(pkt);
     if(length>512)
     {
     		return E_LENGTH;
     }
 
-    int16_t type = pkt_get_type(pkt);
-    if(type!=1 && type!=2 && type!=3)
-	  {
-	      return E_TYPE;
-    }
-
-    if(pkt_get_window(pkt)>31)
-	  {
-	     return E_WINDOW;
-    }
-
-
-    memcpy(buf, pkt, 2);
+    buf[0] = (uint8_t) (type << 6 | tr <<5 | window);
+    buf[1] = seqnum;
     memcpy(buf + 2, &length, 2);
     *len = 4;
 
-    *len += 4; //pour le  Timestamp
 
-    uint32_t crc1 = (int)crc32(0, (const void *) buf, 4);
+    int timestamp= pkt_get_timestamp(pkt);
+    memcpy(buf + *len, &timestamp, 4);
+    *len += 4;
+
+    uint32_t crc1 = (uint32_t)crc32(0, (Bytef *) buf, *len);
     memcpy(buf + *len, &crc1, 4);
     *len += 4;
 
     if (length != 0)
     {
         char *payload = (char *)pkt_get_payload(pkt);
-        int lon = pkt_get_length(pkt);
-        if (lon % 4)
-            lon += 4 - lon % 4;
-        memcpy(buf + *len, payload, lon);
+        memcpy(buf + *len, payload, length);
 
-        *len += lon;
+        *len += length;
 
-        uint32_t crc2 = (int)crc32(0, (const void *) buf, 12+length);
+        uint32_t crc2 = (uint32_t)crc32(0, (Bytef *) buf, *len);
         memcpy(buf + *len, &crc2, 4);
         *len += 4;
     }
