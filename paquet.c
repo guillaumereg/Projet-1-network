@@ -34,7 +34,7 @@ struct __attribute__((__packed__)) pkt {
  * @return: NULL en cas d'erreur */
 pkt_t* pkt_new(){
 
-  struct pkt  * r= NULL;
+  pkt_t  * r=(struct pkt *)malloc(sizeof(struct pkt));
   r->header = (struct header *)malloc (sizeof(struct header));
   if(r->header==NULL)
   {
@@ -211,9 +211,6 @@ pkt_status_code pkt_encode(const pkt_t* pkt, char *buf, size_t *len)
 
 ptypes_t pkt_get_type     (const pkt_t* r)
 {
-  if (r == NULL ){
-    return -1;
-  }
   return r->header->type;
 }
 
@@ -223,11 +220,11 @@ ptypes_t pkt_get_type     (const pkt_t* r)
  */
 pkt_status_code pkt_set_type     (pkt_t* r, const ptypes_t type)
 {
-  if (r != NULL ){
-    r->header->type=type;
-    return 0;
+  if(type != PTYPE_DATA && type != PTYPE_ACK && type != PTYPE_NACK){
+    return E_TYPE;
   }
-  return -1;
+  r->header->type=type;
+  return PKT_OK;
 }
 
 /**
@@ -236,9 +233,6 @@ pkt_status_code pkt_set_type     (pkt_t* r, const ptypes_t type)
  */
 uint8_t  pkt_get_tr       (const pkt_t* r)
 {
-  if (r == NULL ){
-    return -1;
-  }
   return r->header->tr;
 }
 
@@ -248,11 +242,11 @@ uint8_t  pkt_get_tr       (const pkt_t* r)
  */
 pkt_status_code pkt_set_tr       (pkt_t* r, const uint8_t tr)
 {
-  if (r != NULL ){
-    r->header->tr=tr;
-    return 0;
+  if(tr > 1){
+    return E_TR;
   }
-  return -1;
+  r->header->tr=tr;
+  return PKT_OK;
 }
 
 /**
@@ -261,9 +255,6 @@ pkt_status_code pkt_set_tr       (pkt_t* r, const uint8_t tr)
  */
 uint8_t  pkt_get_window   (const pkt_t* r)
 {
-  if (r == NULL ){
-    return -1;
-  }
   return r->header->window;
 }
 
@@ -273,11 +264,13 @@ uint8_t  pkt_get_window   (const pkt_t* r)
  */
 pkt_status_code pkt_set_window   (pkt_t* r, const uint8_t window)
 {
-  if (r != NULL ){
-    r->header->window=window;
-    return 0;
+  if(window > MAX_WINDOW_SIZE){
+      return E_WINDOW;
   }
-  return -1;
+  else{
+      r->header->window=window;
+      return PKT_OK;
+  }
 }
 
 /**
@@ -286,9 +279,6 @@ pkt_status_code pkt_set_window   (pkt_t* r, const uint8_t window)
  */
 uint8_t  pkt_get_seqnum   (const pkt_t* r)
 {
-  if (r == NULL ){
-    return -1;
-  }
   return r->header->seqnum;
 }
 
@@ -298,11 +288,8 @@ uint8_t  pkt_get_seqnum   (const pkt_t* r)
  */
 pkt_status_code pkt_set_seqnum   (pkt_t* r, const uint8_t seqnum)
 {
-  if (r != NULL ){
-    r->header->seqnum=seqnum;
-    return 0;
-  }
-  return -1;
+  r->header->seqnum=seqnum;
+  return PKT_OK;
 }
 
 /**
@@ -311,9 +298,6 @@ pkt_status_code pkt_set_seqnum   (pkt_t* r, const uint8_t seqnum)
  */
 uint16_t pkt_get_length   (const pkt_t* r)
 {
-  if (r == NULL ){
-    return -1;
-  }
   return r->header->length;
 }
 
@@ -323,11 +307,11 @@ uint16_t pkt_get_length   (const pkt_t* r)
  */
 pkt_status_code pkt_set_length   (pkt_t* r, const uint16_t length)
 {
-  if (r != NULL ){
-    r->header->length=length;
-    return 0;
+  if(length > 512){
+    return E_LENGTH;
   }
-  return -1;
+  r->header->length=length;
+  return PKT_OK;
 }
 
 /**
@@ -336,9 +320,6 @@ pkt_status_code pkt_set_length   (pkt_t* r, const uint16_t length)
  */
 uint32_t pkt_get_timestamp(const pkt_t* r)
 {
-  if (r == NULL ){
-    return -1;
-  }
   return r->timestamp;
 }
 
@@ -348,11 +329,8 @@ uint32_t pkt_get_timestamp(const pkt_t* r)
  */
 pkt_status_code pkt_set_timestamp(pkt_t* r, const uint32_t timestamp)
 {
-  if (r != NULL ){
-    r->timestamp=timestamp;
-    return 0;
-  }
-  return -1;
+  r->timestamp=timestamp;
+  return PKT_OK;
 }
 
 /**
@@ -361,9 +339,6 @@ pkt_status_code pkt_set_timestamp(pkt_t* r, const uint32_t timestamp)
  */
 uint32_t pkt_get_crc1     (const pkt_t* r)
 {
-  if (r == NULL ){
-    return -1;
-  }
   return r->crc1;
 }
 
@@ -373,11 +348,8 @@ uint32_t pkt_get_crc1     (const pkt_t* r)
  */
 pkt_status_code pkt_set_crc1     (pkt_t* r, const uint32_t crc1)
 {
-  if (r != NULL ){
-    r->crc1=crc1;
-    return 0;
-  }
-  return -1;
+  r->crc1=crc1;
+  return PKT_OK;
 }
 
 /* Renvoie un pointeur vers le payload du paquet, ou NULL s'il n'y
@@ -385,9 +357,6 @@ pkt_status_code pkt_set_crc1     (pkt_t* r, const uint32_t crc1)
  */
 const char* pkt_get_payload(const pkt_t* r)
 {
-  if (r == NULL ){
-    return NULL;
-  }
   return r->payload;
 }
 
@@ -395,16 +364,18 @@ const char* pkt_get_payload(const pkt_t* r)
  * @data: Une succession d'octets representants le payload
  * @length: Le nombre d'octets composant le payload
  * @POST: pkt_get_length(pkt) == length */
-pkt_status_code pkt_set_payload(pkt_t* r,
-                                const char *data,
-                                const uint16_t length)
+pkt_status_code pkt_set_payload(pkt_t* r, const char *data, const uint16_t length)
 {
+  if(r->payload != NULL){
+    free(r->payload);
+  }
   r->payload = (char*)malloc(sizeof(char)*length);
-  if(r == NULL){
-    return -1;
+  if(r->payload == NULL){
+    return E_NOMEM;
   }
   memcpy(r->payload,data,length);
-  return 0;
+  pkt_set_length(r, length);
+  return PKT_OK;
 }
 /* Renvoie le CRC2 dans l'endianness native de la machine. Si
  * ce field n'est pas present, retourne 0.
@@ -424,7 +395,7 @@ pkt_status_code pkt_set_crc2(pkt_t* r, const uint32_t crc2)
 {
   if (r != NULL ){
     r->crc2=crc2;
-    return 0;
+    return PKT_OK;
   }
   return -1;
 }
