@@ -14,6 +14,60 @@
 
 #include "paquet.h"
 
+struct node {
+  char* segment;
+  struct node* next;
+};
+
+
+//transforme le fichier en liste de segments
+int putInList(struct node **first, int filePresent, char* filename){
+  ssize_t bufferLength = 8; //supposont que la taille maximale du buffer est de 8 bytes au lieu de 512
+  char *buffer = malloc(sizeof(char)*bufferLength);
+  FILE *fp;
+  if(filePresent == 0){
+    fp = stdin;
+  }
+  else{
+    fp = fopen(filename, "r");
+  }
+  int count=0;
+  struct node *last= NULL;
+  while ((count=fread(buffer, 1, bufferLength, fp)) > 0) {  //send the buffer
+    printf("count: %d buffer: %s\n",count, buffer);
+    struct node* item = (struct node*)malloc(sizeof(struct node));
+    item->segment = buffer;
+    if(last == NULL){ //item est le premier element à ajouter dans la liste
+      *first = item;
+    }
+    else{
+      last->next = item;
+    }
+    last = item;
+    buffer = malloc(sizeof(char)*bufferLength);
+  }
+  free(buffer);
+  if(filePresent == 1){ //ne pas fermer stdin
+    fclose(fp);
+  }
+  return 0;
+}
+
+
+//free the segmentlist
+int sendList(struct node *first){
+  struct node* removeItem;
+  struct node* iter = first;
+  while(iter!=NULL){
+    removeItem = iter;
+    printf("item: %s\n", removeItem->segment);
+    iter = iter->next;
+    free(removeItem->segment);
+    free(removeItem);
+  }
+  return 0;
+}
+
 int main(int argc, char **argv){
   int option = 0;
   int filePresent = 0;
@@ -40,7 +94,7 @@ int main(int argc, char **argv){
     portname = *(argv+2);   //port sur lequel receiver recoit
   }
   printf("hostname: %s portname: %s\n", hostname, portname);
-//--------------------------------------------------------------------------
+//-------------------------------------------------------------------------- connecter
 
   //addresse du receiver
   struct addrinfo hints1, *res1;
@@ -87,39 +141,10 @@ int main(int argc, char **argv){
       return -1;
   }
 
-//----------------------------------------------------------------------------
-
-
-
-/*
-  int numbytes;
-  ssize_t bufferLength = 8; //supposont que la taille maximale du buffer est de 8 bytes au lieu de 512
-  char *buffer = malloc(sizeof(char)*bufferLength);
-  FILE *fp;
-  if(filePresent == 0){  //envoyer contenu de stdin dans un fichier et l'envoyer
-    fp = stdin;
-  }
-  else{
-    fp = fopen(filename, "r");
-  }
-  int count;
-  while ((count=fread(buffer, 1, bufferLength, fp)) > 0) {  //send the buffer
-    printf("count: %d\n",count);
-    printf("buffer: %s\n",buffer);
-
-    if ((numbytes = sendto(fd,buffer,bufferLength,0,res->ai_addr,res->ai_addrlen))==-1) {
-      fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
-      exit(1);
-    }
-    printf("sent %d bytes to %s to port %s\n", numbytes, hostname, portname);
-    free(buffer);
-    buffer = malloc(sizeof(char)*bufferLength);
-  }
-  free(buffer);
-  if(filePresent == 1){
-    fclose(fp);
-  }
-*/
+//---------------------------------------------------------------------------- mettre segments dans liste chainée
+  struct node* list = NULL;
+  putInList(&list, filePresent, filename);
+  sendList(list);
   freeaddrinfo(res1);
   freeaddrinfo(res2);
   close(fd);
