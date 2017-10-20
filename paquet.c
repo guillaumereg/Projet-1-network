@@ -67,65 +67,113 @@ void pkt_del(pkt_t* r)
 pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
 {
 
-  if( len < 4)
-	{
-		return E_NOHEADER;
-  }
-  memcpy(pkt, data, 4);
+    if( len < 4)
+  	{
+  		return E_NOHEADER;
+    }
 
-  uint8_t type=pkt_get_type(pkt);
-	if(type !=1 && type!=2 && type!=3){
-    return E_TYPE;
-  }
-
-  uint16_t length = pkt_get_length(pkt);;
-  if (length > 512 ){
-    return E_LENGTH;
-  }
-  if (length != len){
-    return E_UNCONSISTENT;
-  }
-
-  uint8_t tr =  pkt_get_tr(pkt);
-  if ((type == 2 || type ==3) && tr !=0 ){
-    return E_TR;
-  }
+    int *header_actu = malloc(4*sizeof(char));
+    memcpy((void *)header_actu, (void *) data, 4);
 
 
-  uint32_t crc1 = (int)crc32(0, (const void *)data, 4+length);
-  memcpy(&pkt->crc1, data + length + 4, 4);
-  if (crc1 != pkt->crc1){
-      return E_CRC;
-  }
+  //prise et verification de type
+    uint8_t type=*header_actu >> 30;
+  	if(type !=1 && type!=2 && type!=3){
+      return E_TYPE;
+    }
 
-  uint32_t crc2 = (int)crc32(0, (const void *)data, 4+length);
-  memcpy(&pkt->crc2, data + length + 4, 4);
-  if (crc2 != pkt->crc2){
-      return E_CRC;
-  }
+  //prise et verification de tr
+    uint8_t  tr1= *header_actu << 2;
+    uint8_t tr = tr1 >> 31;
+    if ((type == 2 || type ==3) && tr !=0 ){
+      return E_TR;
+    }
 
- return PKT_OK;
+  //prise et verification de window
+    uint8_t window1= *header_actu << 3;
+  	uint8_t window = window1 >> 27;
+  	if(window<0 || window>31){
+  		return E_WINDOW;
+    }
+
+  //prise et verification de seqnum
+    uint8_t seqnum1 = *header_actu << 8;
+  	uint8_t seqnum = seqnum1 >> 26;
+  	if(seqnum<0 || seqnum>255){
+  		return E_SEQNUM;
+    }
+
+  //prise et verification de length
+    uint16_t length1 = *header_actu << 16;
+    uint16_t length = length1 >> 16;
+    if (length > 512 ){
+      return E_LENGTH;
+    }
+    if (length !=(uint16_t) len-16){
+      return E_UNCONSISTENT;
+    }
+
+
+
+  //prise et verification de CRC1
+    int crc_test =0;
+    memcpy((void *)&crc_test,(void *)&data[8],4);
+
+    uint32_t crc1 = (uint32_t)crc32(0, (const void *)data, 8);
+    if (crc1 != crc_test){
+        return E_CRC;
+    }
+
+
+  //prise et verification de CRC1
+    int crc_test2 =0;
+    memcpy((void *)&crc_test2,(void *)&data[len-4],4);
+
+    uint32_t crc2 = (uint32_t)crc32(0, (const void *)data, len-4);
+    if (crc2 != crc_test2){
+        return E_CRC;
+    }
+
+    return PKT_OK;
 
 }
+
 
 
 pkt_status_code pkt_encode(const pkt_t* pkt, char *buf, size_t *len)
 {
 
-    memcpy(buf, pkt, 2);
+    int16_t length = pkt_get_length(pkt);
+    if(length>512)
+    {
+    		return E_LENGTH;
+    }
 
-    uint16_t length = (pkt->header->length);
+    int16_t type = pkt_get_type(pkt);
+    if(type!=1 && type!=2 && type!=3)
+	  {
+	      return E_TYPE;
+    }
+
+    if(pkt_get_window(pkt)>31)
+	  {
+	     return E_WINDOW;
+    }
+
+
+    memcpy(buf, pkt, 2);
     memcpy(buf + 2, &length, 2);
     *len = 4;
 
-    uint32_t crc1 = (int)crc32(0, (const void *) buf, 4+length);
+    *len += 4; //pour le  Timestamp
+
+    uint32_t crc1 = (int)crc32(0, (const void *) buf, 4);
     memcpy(buf + *len, &crc1, 4);
     *len += 4;
 
-    char *payload = (char *)pkt_get_payload(pkt);
-
-    if (payload != NULL)
+    if (length != 0)
     {
+        char *payload = (char *)pkt_get_payload(pkt);
         int lon = pkt_get_length(pkt);
         if (lon % 4)
             lon += 4 - lon % 4;
@@ -133,7 +181,7 @@ pkt_status_code pkt_encode(const pkt_t* pkt, char *buf, size_t *len)
 
         *len += lon;
 
-        uint32_t crc2 = (int)crc32(0, (const void *) buf, 4+length);
+        uint32_t crc2 = (int)crc32(0, (const void *) buf, 12+length);
         memcpy(buf + *len, &crc2, 4);
         *len += 4;
     }
