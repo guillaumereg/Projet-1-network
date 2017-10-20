@@ -109,12 +109,6 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-  //creation d'un socket
-  if((fd=socket(res1->ai_family,res1->ai_socktype,res1->ai_protocol)) ==-1){
-    fprintf(stderr, "socket error %s\n", gai_strerror(fd));
-    exit(1);
-  }
-
   //addresse du sender
   struct addrinfo hints2, *res2;
   int err2;
@@ -129,13 +123,19 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-  //lier adresse du sender au socket
+  //creation d'un socket en utilisant l'adresse du sender
+  if((fd=socket(res2->ai_family,res2->ai_socktype,res2->ai_protocol)) ==-1){
+    fprintf(stderr, "socket error %s\n", gai_strerror(fd));
+    exit(1);
+  }
+
+  //lier adresse du sender au socket du sender
   if (bind(fd, res2->ai_addr, res2->ai_addrlen)==-1) {
       fprintf(stderr, "bind error: %s\n",strerror(errno));
       return -1;
   }
 
-  //connecte le socket à l'adresse du destinataire
+  //connecte le socket à l'adresse du receiver
   if (connect(fd, res1->ai_addr, res1->ai_addrlen)==-1) {
       fprintf(stderr, "bind error: %s\n",strerror(errno));
       return -1;
