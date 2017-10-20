@@ -15,29 +15,6 @@
 #include "paquet.h"
 
 int main(int argc, char **argv){
-  /*
-  struct record *r;
-  r = (struct record*)malloc(sizeof(struct record));
-  int a = record_init(r);
-  if (a==-1){
-    return -1;
-  }
-  record_set_payload(r,"12345\0",6);
-  record_free(r);
-
-  */
-  /*
-  terminal: ./sender 1 2 3 > text.txt
-  printf("hello %s \n", *(argv+3));
-
-  terminal: ./sender < text.txt
-  int ch;
-    do {
-      ch = fgetc(stdin);
-      putchar(ch);
-  } while (ch != EOF
-  */
-
   int option = 0;
   int filePresent = 0;
   char* filename = NULL;
@@ -63,12 +40,9 @@ int main(int argc, char **argv){
     portname = *(argv+2);   //port sur lequel receiver recoit
   }
   printf("hostname: %s portname: %s\n", hostname, portname);
-
-  //-------------------------------------------------------------------
-
+//--------------------------------------------------------------------------
   struct addrinfo hints, *res;
   int err, fd, numbytes;
-  char datagram[5] = "test\0";
   memset(&hints,0,sizeof(hints));
   hints.ai_family=AF_INET6; //IPv6
   hints.ai_socktype=SOCK_DGRAM;
@@ -85,71 +59,38 @@ int main(int argc, char **argv){
     exit(1);
   }
 
+//----------------------------------------------------------------------------
 
-  if ((numbytes = sendto(fd,datagram,sizeof(datagram),0,res->ai_addr,res->ai_addrlen))==-1) {
-    fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
-    exit(1);
+
+  ssize_t bufferLength = 8; //supposont que la taille maximale du buffer est de 8 bytes au lieu de 512
+  char *buffer = malloc(sizeof(char)*bufferLength);
+  FILE *fp;
+  if(filePresent == 0){  //envoyer contenu de stdin dans un fichier et l'envoyer
+    fp = stdin;
   }
+  else{
+    fp = fopen(filename, "r");
+  }
+  int count;
+  while ((count=fread(buffer, 1, bufferLength, fp)) > 0) {  //send the buffer
+    printf("count: %d\n",count);
+    printf("buffer: %s\n",buffer);
 
-
-  // région expérimentale
-  if(filePresent == 1 ){
-
-        FILE *lectureFichier = NULL;
-        char octetActu ;
-        char listeOctet[512];
-        int nbrOctet=0;
-        int nbrOctetTotal=0;
-
-
-        lectureFichier = fopen(filename, "rb");
-
-        if(lectureFichier == NULL)
-        {
-            exit(1);
-        }
-
-
-        while( fread(&octetActu, 1, sizeof(octetActu), lectureFichier) != 0)
-        {
-            listeOctet[nbrOctet]=octetActu;
-            nbrOctet++;
-            nbrOctetTotal++;
-
-            if(nbrOctet == 512){
-
-              listeOctet[nbrOctet]='\0';
-              nbrOctet=0;
-
-              if ((numbytes = sendto(fd,listeOctet,sizeof(listeOctet),0,res->ai_addr,res->ai_addrlen))==-1) {
-                fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
-                exit(1);
-              }
-
-              strcpy(listeOctet, ""); //chaine "nulle"
-            }
-        }
-
-        if ((numbytes = sendto(fd,listeOctet,nbrOctet,0,res->ai_addr,res->ai_addrlen))==-1) {
-          fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
-          exit(1);
-        }
-
-        numbytes=nbrOctetTotal;
-        fclose(lectureFichier);
-        filePresent=0;
+    if ((numbytes = sendto(fd,buffer,bufferLength,0,res->ai_addr,res->ai_addrlen))==-1) {
+      fprintf(stderr, "sendto error: %s\n", gai_strerror(numbytes));
+      exit(1);
     }
-
-
-
-  char ip6[INET6_ADDRSTRLEN];
-  struct in6_addr addr = ((struct sockaddr_in6*)(res->ai_addr))->sin6_addr;
-  printf("hostname: %s: ntop: %s\n", hostname, inet_ntop(AF_INET6, &addr, ip6, INET6_ADDRSTRLEN));
-  printf("sent %d bytes to %s to port %s\n", numbytes, ip6, portname);
+    printf("sent %d bytes to %s to port %s\n", numbytes, hostname, portname);
+    free(buffer);
+    buffer = malloc(sizeof(char)*bufferLength);
+  }
+  free(buffer);
+  if(filePresent == 1){
+    fclose(fp);
+  }
 
   freeaddrinfo(res);
   close(fd);
-
 
   return 0;
 }

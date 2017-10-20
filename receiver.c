@@ -15,8 +15,6 @@
 #include "paquet.h"
 
 int main(int argc, char **argv){
-
-
   int option = 0;
   int filePresent = 0;
   char* filename = NULL;
@@ -45,6 +43,19 @@ int main(int argc, char **argv){
 //-------------------------------------------------------------------------
 
 
+//comment faire pour le dernier recvfrom????
+
+
+  //ssize_t bufferLength = 8; //supposont que la taille maximale du buffer est de 8 bytes au lieu de 512
+  //char buffer[bufferLength];
+  if(filePresent == 1){  //enregistrer dans filename
+
+
+  }
+  else{ //utiliser stdout comme output
+
+  }
+/*
   struct addrinfo hints, *res;
   int err, fd, numbytes;
   memset(&hints,0,sizeof(hints));
@@ -69,7 +80,6 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-  //char *buffer = (char*)malloc(sizeof(char)*4+1);
   char buffer[5];
 
   struct sockaddr_storage src_addr;
@@ -80,38 +90,6 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-  // région expérimentale
-  if(filePresent == 1 ){
-
-        FILE *ecritureFichier = NULL;
-        char receverOctet[512];
-
-        ecritureFichier = fopen(filename, "wb");
-
-        if(ecritureFichier == NULL)
-        {
-            exit(1);
-        }
-
-        if ((numbytes = recvfrom(fd, receverOctet, sizeof(receverOctet), 0,(struct sockaddr *)&src_addr, &src_addr_len)) == -1) {
-          fprintf(stderr, "recvfrom error %s\n", gai_strerror(fd));
-          exit(1);
-        }
-
-        while(numbytes!=0){
-          fputs(receverOctet,ecritureFichier);
-          strcpy(receverOctet, ""); //chaine "nulle"
-          if ((numbytes = recvfrom(fd, receverOctet, sizeof(receverOctet), 0,(struct sockaddr *)&src_addr, &src_addr_len)) == -1) {
-            fprintf(stderr, "recvfrom error %s\n", gai_strerror(fd));
-           exit(1);
-          }
-        }
-
-        fclose(ecritureFichier);
-        filePresent=0;
-    }
-
-
   char ip6[INET6_ADDRSTRLEN];
   struct in6_addr addr = ((struct sockaddr_in6*)(&src_addr))->sin6_addr;
   inet_ntop(AF_INET6, &addr, ip6, INET6_ADDRSTRLEN);
@@ -120,38 +98,6 @@ int main(int argc, char **argv){
 
   freeaddrinfo(res);
   close(fd);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*/
     return 0;
 }

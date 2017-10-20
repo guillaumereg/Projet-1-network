@@ -1,0 +1,22 @@
+sender:
+-lis stdin/fichier, crée des segments et les envoie dans une pile
+-vide la pile en envoyant les segments
+-ecrit segments de type PTYPE_DATA sur socket writesfs
+-reçoit segments de types PTYPE_ACK et PTYPE_NACK sur socket readsfs
+receiver:
+-reçoit segments de types PTYPE_DATA sur socket readsfs
+-ecrit segments de types PTYPE_ACK et PTYPE_NACK sur socket writesfs
+
+ temps nécessaire à un paquet de données pour passer de la source à la destination à travers un réseau. = [0,2000] (ms) 
+
+
+selective repeat:
+
+The timer is started when the frame is sent and cancelled upon reception of an acknowledgement that covers this frame. 
+
+-->When a retransmission timer expires, the corresponding frame is retransmitted and this retransmission timer is restarted.
+-->When an acknowledgement is received, all the frames that are covered by this acknowledgement are removed from the sending buffer and the sliding window is updated.
+
+
+
+
