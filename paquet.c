@@ -162,58 +162,71 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
 pkt_status_code pkt_encode(const pkt_t* pkt, char *buf, size_t *len)
 {
 
-    int8_t type = pkt_get_type(pkt);
-    if(type!=1 && type!=2 && type!=3)
-    {
-        return E_TYPE;
-    }
+  int8_t type = pkt_get_type(pkt);
+  if(type!=1 && type!=2 && type!=3)
+  {
+      return E_TYPE;
+  }
 
-    int8_t tr = pkt_get_tr(pkt);
-    if ((type == 2 || type ==3) && tr !=0 ){
-      return E_TR;
-    }
+  int8_t tr = pkt_get_tr(pkt);
+  if ((type == 2 || type ==3) && tr !=0 ){
+    return E_TR;
+  }
 
-    int8_t window = pkt_get_window(pkt);
-    if(window>31)
-    {
-       return E_WINDOW;
-    }
+  int8_t window = pkt_get_window(pkt);
+  if(window>31)
+  {
+     return E_WINDOW;
+  }
 
-    int8_t seqnum = pkt_get_seqnum(pkt);
-
-    int16_t length = pkt_get_length(pkt);
-    if(length>512)
-    {
-    		return E_LENGTH;
-    }
-
-    buf[0] = (uint8_t) (type << 6 | tr <<5 | window);
-    buf[1] = seqnum;
-    memcpy(buf + 2, &length, 2);
-    *len = 4;
+  int8_t seqnum = pkt_get_seqnum(pkt);
 
 
-    int timestamp= pkt_get_timestamp(pkt);
-    memcpy(buf + *len, &timestamp, 4);
-    *len += 4;
+  int16_t length = pkt_get_length(pkt);
+  if(length>512)
+  {
+      return E_LENGTH;
+  }
 
-    uint32_t crc1 = (uint32_t)crc32(0, (Bytef *) buf, *len);
-    memcpy(buf + *len, &crc1, 4);
-    *len += 4;
+  buf[0] = (uint8_t) (type << 6 | tr <<5 | window);
+  buf[1] = seqnum;
+  buf[2] = length >> 8 & 0xFF;
+  buf[3] = length & 0xFF;
 
-    if (length != 0)
-    {
-        char *payload = (char *)pkt_get_payload(pkt);
-        memcpy(buf + *len, payload, length);
+  *len = 4;
 
-        *len += length;
 
-        uint32_t crc2 = (uint32_t)crc32(0, (Bytef *) buf, *len);
-        memcpy(buf + *len, &crc2, 4);
-        *len += 4;
-    }
+  int timestamp= pkt_get_timestamp(pkt);
+  memcpy(buf + 4, &timestamp, 4);
+  *len += 4;
 
-    return PKT_OK;
+  uint32_t crc1 = (uint32_t)crc32(0, (Bytef *) buf, *len);
+  buf[*len] = (crc1 >> 24) & 0xFF;
+  buf[*len+1] = (crc1 >> 16) & 0xFF;
+  buf[*len+2] = (crc1 >> 8) & 0xFF;
+  buf[*len+3] = crc1 & 0xFF;
+
+  *len += 4;
+
+  if (length != 0)
+  {
+      const char *payload = (char *)pkt_get_payload(pkt);
+      uint16_t i;
+      for(i = 0; i < length; i++) {
+          buf[*len+i] = payload[i];
+      }
+
+      *len += length;
+
+      uint32_t crc2 = (uint32_t)crc32(0, (Bytef *) buf, *len);
+      buf[*len+1] = (crc2 >> 24) & 0xFF;
+      buf[*len+2] = (crc2 >> 16) & 0xFF;
+      buf[*len+3] = (crc2 >> 8) & 0xFF;
+      buf[*len+4] = crc2 & 0xFF;
+      *len += 4;
+  }
+
+  return PKT_OK;
 }
 
 
@@ -250,7 +263,7 @@ uint8_t  pkt_get_tr       (const pkt_t* r)
  */
 pkt_status_code pkt_set_tr       (pkt_t* r, const uint8_t tr)
 {
-  if(tr > 1){
+  if(tr > 1 || tr<0){
     return E_TR;
   }
   r->header->tr=tr;
@@ -272,7 +285,7 @@ uint8_t  pkt_get_window   (const pkt_t* r)
  */
 pkt_status_code pkt_set_window   (pkt_t* r, const uint8_t window)
 {
-  if(window > MAX_WINDOW_SIZE){
+  if(window > MAX_WINDOW_SIZE || window<0){
       return E_WINDOW;
   }
   else{
@@ -296,8 +309,13 @@ uint8_t  pkt_get_seqnum   (const pkt_t* r)
  */
 pkt_status_code pkt_set_seqnum   (pkt_t* r, const uint8_t seqnum)
 {
-  r->header->seqnum=seqnum;
-  return PKT_OK;
+  if(seqnum > 255 || seqnum<0){
+      return E_SEQNUM;
+  }
+  else{
+    r->header->seqnum=seqnum;
+    return PKT_OK;
+  }
 }
 
 /**
@@ -315,7 +333,7 @@ uint16_t pkt_get_length   (const pkt_t* r)
  */
 pkt_status_code pkt_set_length   (pkt_t* r, const uint16_t length)
 {
-  if(length > 512){
+  if(length > 512 || length<0){
     return E_LENGTH;
   }
   r->header->length=length;
@@ -378,8 +396,8 @@ pkt_status_code pkt_set_payload(pkt_t* r, const char *data, const uint16_t lengt
     free(r->payload);
   }
   r->payload = (char*)malloc(sizeof(char)*length);
-  if(r->payload == NULL){
-    return E_NOMEM;
+  if(strlen(data) != length){
+    return E_UNCONSISTENT;
   }
   memcpy(r->payload,data,length);
   pkt_set_length(r, length);
