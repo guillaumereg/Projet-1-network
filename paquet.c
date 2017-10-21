@@ -219,10 +219,10 @@ pkt_status_code pkt_encode(const pkt_t* pkt, char *buf, size_t *len)
       *len += length;
 
       uint32_t crc2 = (uint32_t)crc32(0, (Bytef *) buf, *len);
-      buf[*len+1] = (crc2 >> 24) & 0xFF;
-      buf[*len+2] = (crc2 >> 16) & 0xFF;
-      buf[*len+3] = (crc2 >> 8) & 0xFF;
-      buf[*len+4] = crc2 & 0xFF;
+      buf[*len] = (crc2 >> 24) & 0xFF;
+      buf[*len+1] = (crc2 >> 16) & 0xFF;
+      buf[*len+2] = (crc2 >> 8) & 0xFF;
+      buf[*len+3] = crc2 & 0xFF;
       *len += 4;
   }
 
