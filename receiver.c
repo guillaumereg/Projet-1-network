@@ -66,7 +66,26 @@ int recvItems(int sockfd){
   return 0;
 }
 
+void printSegment(const pkt_t* pkt){
+    printf("HEADER----------\n");
+    printf("type: %d\n", pkt_get_type(pkt));
+    printf("tr: %d\n", pkt_get_tr(pkt));
+    printf("window: %d\n", pkt_get_window(pkt));
+    printf("seqnum: %d\n", pkt_get_seqnum(pkt));
+    printf("length: %d\n", pkt_get_length(pkt));
+    printf("PACKET---------------\n");
+    printf("timestamp: %d\n", pkt_get_timestamp(pkt));
+    printf("CRC1: %d\n", pkt_get_crc1(pkt));
+    //printf("payload: %s CRC2: %d\n", pkt_get_payload(pkt), pkt_get_crc2(pkt));
+    printf("payload: ? CRC2: %d\n", pkt_get_crc2(pkt));
+    printf("---------------------------------------\n");
+}
+
 int main(int argc, char **argv){
+
+/*
+
+
   int option = 0;
   int filePresent = 0;
   char* filename = NULL;
@@ -138,6 +157,32 @@ int main(int argc, char **argv){
   free(senderAddress);
   freeaddrinfo(res1);
   close(fd);
+*/
 
+
+  pkt_t *pkt= pkt_new();
+
+  char *payload = malloc(sizeof(char)*5);
+  payload="test\0";
+  pkt_set_type(pkt, (const uint8_t) 1);
+  pkt_set_tr(pkt, (const uint8_t) 0);
+  pkt_set_window(pkt, (const uint8_t) 3);
+  pkt_set_seqnum(pkt, (const uint8_t) 42);
+  pkt_set_length(pkt, (const uint16_t) 5); //taille payload en bytes
+  pkt_set_timestamp(pkt, (const uint16_t) 0);
+  pkt_set_payload(pkt, payload, (const uint16_t) pkt_get_length(pkt));
+
+  printSegment(pkt);
+//--------------------------------- marche
+  char *buf = malloc(1024);
+  size_t len = 1024;
+  pkt_encode(pkt, buf, &len);
+  printf("paquet est encodé\n");
+  pkt_t *pkt2 = NULL;
+  pkt_decode(buf, (size_t)1024, pkt2);
+  printf("avantMessageErreur\n");
+  printSegment(pkt2);
+  printf("apresMessageErreur\n");
+  pkt_del(pkt);
   return 0;
 }

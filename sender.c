@@ -39,6 +39,7 @@ int putInList(struct node **first, int filePresent, char* filename){
   while ((count=fread(buffer, 1, bufferLength, fp)) > 0) {  //send the buffer
     struct node* item = (struct node*)malloc(sizeof(struct node));
     item->segment = buffer;
+    item->next = NULL;
     if(last == NULL){ //item est le premier element à ajouter dans la liste
       *first = item;
     }
@@ -122,7 +123,6 @@ int removeList(struct node *first){
   struct node *iter = first;
   while(iter!=NULL){
     removeItem = iter;
-    printf("remove item: %s\n", removeItem->segment);
     iter = iter->next;
     free(removeItem->segment);
     free(removeItem);
