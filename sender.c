@@ -22,9 +22,9 @@ struct node {
   struct node* next;
 };
 
-
 //transforme le fichier en liste de segments
 int putInList(struct node **first, int filePresent, char* filename){
+  int size=0;
   ssize_t bufferLength = 8; //supposont que la taille maximale du buffer est de 8 bytes au lieu de 512
   char *buffer = malloc(sizeof(char)*bufferLength);
   FILE *fp;
@@ -37,7 +37,6 @@ int putInList(struct node **first, int filePresent, char* filename){
   int count=0;
   struct node *last= NULL;
   while ((count=fread(buffer, 1, bufferLength, fp)) > 0) {  //send the buffer
-    //printf("count: %d buffer: %s\n",count, buffer);
     struct node* item = (struct node*)malloc(sizeof(struct node));
     item->segment = buffer;
     if(last == NULL){ //item est le premier element à ajouter dans la liste
@@ -48,31 +47,48 @@ int putInList(struct node **first, int filePresent, char* filename){
     }
     last = item;
     buffer = malloc(sizeof(char)*bufferLength);
+    size++;
   }
   free(buffer);
   if(filePresent == 1){ //ne pas fermer stdin
     fclose(fp);
   }
-  return 0;
+  return size;
 }
 
 
 //send list of segments
-int sendItems(struct node *first, int sockfd){
+int sendItems(struct node *first, int sockfd, int numElementsRemaining){
+  /*
+  int sendWindowLength = 3;
+  int recvWindowLength = 3;
+  int windowLength;  //envoyer 3 à la fois
+  if(sendWindowLength < recvWindowLength){
+    windowLength = sendWindowLength;
+  }
+  else{
+    windowLength = recWindowLength;
+  }
+  */
+  int size = numElementsRemaining;
+  int numElementsSent = 0;
+  int numAcks = 0;
   int sendSegmentLength = 9;
   int recvAckLength = 4;
   struct node* sendItem = first;
   char *rcvAck = malloc(recvAckLength);
   fd_set readfds, writefds;
+
   struct timeval tv;
-  int lastItem = 0;
-  while(1){
+  while(numElementsSent < size || numAcks < size){
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
     FD_SET(sockfd, &readfds);
     FD_SET(sockfd, &writefds);
-    tv.tv_sec = 3;
-    select(sockfd + 1, &readfds, &writefds, NULL, &tv); //attend possible d'écrire ou lire sur sockfd
+    tv.tv_sec = 5;
+    tv.tv_usec = 0;
+    select(sockfd + 1, &readfds, &writefds, NULL, &tv); //attendre poss de lire/écrire
+
     if(FD_ISSET(sockfd, &readfds)){ //recevoir segment de ack
       printf("possibilité de lecture\n");
       if(recv(sockfd,(void*)rcvAck, recvAckLength, 0) == -1){
@@ -82,11 +98,10 @@ int sendItems(struct node *first, int sockfd){
       printf("received ack: %s\n", rcvAck);
       free(rcvAck);
       rcvAck = malloc(recvAckLength);
-      if(lastItem == 1){ //ack of last segment received
-        break;
-      }
+      numAcks++;
     }
-    if(FD_ISSET(sockfd, &writefds)){ //envoyer segment
+
+    if(FD_ISSET(sockfd, &writefds) && numElementsSent < size){ //envoyer segment
       printf("possibilité d'écriture\n");
       if(send(sockfd,(void*)sendItem->segment , sendSegmentLength, 0) == -1){
         fprintf(stderr, "send segment error: %s\n",strerror(errno));
@@ -94,9 +109,7 @@ int sendItems(struct node *first, int sockfd){
       }
       printf("envoyé %s\n", sendItem->segment);
       sendItem = sendItem->next;
-      if(sendItem == NULL){
-        lastItem = 1;
-      }
+      numElementsSent++;
     }
   }
   free(rcvAck);
@@ -159,34 +172,12 @@ int main(int argc, char **argv){
     exit(1);
   }
 
-/*
-  //addresse du sender
-  struct addrinfo hints2, *res2;
-  int err2;
-  memset(&hints2,0,sizeof(hints2));
-  hints2.ai_family=AF_INET6; //IPv6
-  hints2.ai_socktype=SOCK_DGRAM;
-  hints2.ai_protocol=IPPROTO_UDP; //udp
-  hints2.ai_flags = AI_PASSIVE; //utiliser l'adresse du sender
-
-  if((err2=getaddrinfo(hostname,portname,&hints2,&res2)) != 0){
-    fprintf(stderr, "getaddrinfo 2 error: %s\n", gai_strerror(err2));
-    exit(1);
-  }
-*/
-
   //creation d'un socket en utilisant l'adresse de receiver
   if((fd=socket(res1->ai_family,res1->ai_socktype,res1->ai_protocol)) ==-1){
     fprintf(stderr, "socket error %s\n", gai_strerror(fd));
     exit(1);
   }
-/*
-  //lier adresse du sender au socket du sender
-  if (bind(fd, res2->ai_addr, res2->ai_addrlen)==-1) {
-      fprintf(stderr, "bind error: %s\n",strerror(errno));
-      return -1;
-  }
-*/
+
 
   //connecte le socket à l'adresse du receiver
   if (connect(fd, res1->ai_addr, res1->ai_addrlen)==-1) {
@@ -196,11 +187,10 @@ int main(int argc, char **argv){
 
 //---------------------------------------------------------------------------- mettre segments dans liste chainée
   struct node* list = NULL;
-  putInList(&list, filePresent, filename);
-  sendItems(list, fd);
+  int size = putInList(&list, filePresent, filename);
+  sendItems(list, fd, size);
   removeList(list);
   freeaddrinfo(res1);
-  //freeaddrinfo(res2);
   close(fd);
 
   return 0;

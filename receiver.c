@@ -19,19 +19,26 @@
 int recvItems(int sockfd){
   int recvSegmentLength = 9;
   int sendAckLength = 4;
-  char *rcvSegment = malloc(recvSegmentLength);
+  char *rcvSegment = (char *)malloc(recvSegmentLength);
   fd_set readfds, writefds;
+  char ack [4]= "ack\0";
+  int testSelect;
+
   struct timeval tv;
-  char *ack = malloc(sendAckLength);
-  ack="ack\0";
   while(1){
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
     FD_SET(sockfd, &readfds);
     FD_SET(sockfd, &writefds);
-    tv.tv_sec = 3;
-    select(sockfd + 1, &readfds, &writefds, NULL, &tv); //attend possible d'écrire ou lire sur sockfd
-    if(FD_ISSET(sockfd, &readfds)){ //recevoir segment
+    tv.tv_sec = 5;
+    tv.tv_usec = 0;
+    testSelect = select(sockfd + 1, &readfds, &writefds, NULL, &tv);
+    printf("testSelect: %d\n",testSelect);
+    if(testSelect == -1){ //erreur
+      fprintf(stderr, "recv select error: %s\n",strerror(errno));
+      return -1;
+    }
+    else if(FD_ISSET(sockfd, &readfds) ){ //recevoir segment
       printf("possibilité de lecture\n");
       if(recv(sockfd,(void*)rcvSegment, recvSegmentLength, 0) == -1){
         fprintf(stderr, "recv segment error: %s\n",strerror(errno));
@@ -40,7 +47,7 @@ int recvItems(int sockfd){
       printf("received segment: %s\n", rcvSegment);
       if(FD_ISSET(sockfd, &writefds)){ //envoyer ack
         printf("possibilité envoyer ack\n");
-        if(send(sockfd,(void*)ack , recvSegmentLength, 0) == -1){
+        if(send(sockfd,(void*)ack , sendAckLength, 0) == -1){
           fprintf(stderr, "send ack error: %s\n",strerror(errno));
           return -1;
         }
@@ -49,9 +56,14 @@ int recvItems(int sockfd){
       free(rcvSegment);
       rcvSegment = malloc(recvSegmentLength);
     }
+    else { //timout a expiré, plus de paquets à recevoir, seul writefds est dispo
+      printf("timout expiré.\n");
+      break;
+    }
   }
+  printf("fini recv while\n");
   free(rcvSegment);
-  free(ack);
+  return 0;
 }
 
 int main(int argc, char **argv){
