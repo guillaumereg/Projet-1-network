@@ -135,7 +135,7 @@ int main(int argc, char **argv){
   free(peek);
 
   recvItems(fd);
-
+  free(senderAddress);
   freeaddrinfo(res1);
   close(fd);
 
