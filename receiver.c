@@ -11,8 +11,48 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/select.h>
 
 #include "paquet.h"
+
+
+int recvItems(int sockfd){
+  int recvSegmentLength = 9;
+  int sendAckLength = 4;
+  char *rcvSegment = malloc(recvSegmentLength);
+  fd_set readfds, writefds;
+  struct timeval tv;
+  char *ack = malloc(sendAckLength);
+  ack="ack\0";
+  while(1){
+    FD_ZERO(&readfds);
+    FD_ZERO(&writefds);
+    FD_SET(sockfd, &readfds);
+    FD_SET(sockfd, &writefds);
+    tv.tv_sec = 3;
+    select(sockfd + 1, &readfds, &writefds, NULL, &tv); //attend possible d'écrire ou lire sur sockfd
+    if(FD_ISSET(sockfd, &readfds)){ //recevoir segment
+      printf("possibilité de lecture\n");
+      if(recv(sockfd,(void*)rcvSegment, recvSegmentLength, 0) == -1){
+        fprintf(stderr, "recv segment error: %s\n",strerror(errno));
+        return -1;
+      }
+      printf("received segment: %s\n", rcvSegment);
+      if(FD_ISSET(sockfd, &writefds)){ //envoyer ack
+        printf("possibilité envoyer ack\n");
+        if(send(sockfd,(void*)ack , recvSegmentLength, 0) == -1){
+          fprintf(stderr, "send ack error: %s\n",strerror(errno));
+          return -1;
+        }
+        printf("sent ack\n");
+      }
+      free(rcvSegment);
+      rcvSegment = malloc(recvSegmentLength);
+    }
+  }
+  free(rcvSegment);
+  free(ack);
+}
 
 int main(int argc, char **argv){
   int option = 0;
@@ -81,6 +121,8 @@ int main(int argc, char **argv){
     return -1;
   }
   free(peek);
+
+  recvItems(fd);
 
   freeaddrinfo(res1);
   close(fd);

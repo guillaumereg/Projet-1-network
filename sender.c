@@ -11,8 +11,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/select.h>
 
 #include "paquet.h"
+
+#define MAX_SEGMENT_SIZE 1024
 
 struct node {
   char* segment;
@@ -34,7 +37,7 @@ int putInList(struct node **first, int filePresent, char* filename){
   int count=0;
   struct node *last= NULL;
   while ((count=fread(buffer, 1, bufferLength, fp)) > 0) {  //send the buffer
-    printf("count: %d buffer: %s\n",count, buffer);
+    //printf("count: %d buffer: %s\n",count, buffer);
     struct node* item = (struct node*)malloc(sizeof(struct node));
     item->segment = buffer;
     if(last == NULL){ //item est le premier element à ajouter dans la liste
@@ -54,19 +57,66 @@ int putInList(struct node **first, int filePresent, char* filename){
 }
 
 
-//free the segmentlist
-int sendList(struct node *first){
-  struct node* removeItem;
-  struct node* iter = first;
+//send list of segments
+int sendItems(struct node *first, int sockfd){
+  int sendSegmentLength = 9;
+  int recvAckLength = 4;
+  struct node* sendItem = first;
+  char *rcvAck = malloc(recvAckLength);
+  fd_set readfds, writefds;
+  struct timeval tv;
+  int lastItem = 0;
+  while(1){
+    FD_ZERO(&readfds);
+    FD_ZERO(&writefds);
+    FD_SET(sockfd, &readfds);
+    FD_SET(sockfd, &writefds);
+    tv.tv_sec = 3;
+    select(sockfd + 1, &readfds, &writefds, NULL, &tv); //attend possible d'écrire ou lire sur sockfd
+    if(FD_ISSET(sockfd, &readfds)){ //recevoir segment de ack
+      printf("possibilité de lecture\n");
+      if(recv(sockfd,(void*)rcvAck, recvAckLength, 0) == -1){
+        fprintf(stderr, "recv ack error: %s\n",strerror(errno));
+        return -1;
+      }
+      printf("received ack: %s\n", rcvAck);
+      free(rcvAck);
+      rcvAck = malloc(recvAckLength);
+      if(lastItem == 1){ //ack of last segment received
+        break;
+      }
+    }
+    if(FD_ISSET(sockfd, &writefds)){ //envoyer segment
+      printf("possibilité d'écriture\n");
+      if(send(sockfd,(void*)sendItem->segment , sendSegmentLength, 0) == -1){
+        fprintf(stderr, "send segment error: %s\n",strerror(errno));
+        return -1;
+      }
+      printf("envoyé %s\n", sendItem->segment);
+      sendItem = sendItem->next;
+      if(sendItem == NULL){
+        lastItem = 1;
+      }
+    }
+  }
+  free(rcvAck);
+  printf("fin de while, plus de sendItems dispo, dernier ack reçu \n");
+  return 0;
+}
+
+int removeList(struct node *first){
+  struct node *removeItem;
+  struct node *iter = first;
   while(iter!=NULL){
     removeItem = iter;
-    printf("item: %s\n", removeItem->segment);
+    printf("remove item: %s\n", removeItem->segment);
     iter = iter->next;
     free(removeItem->segment);
     free(removeItem);
   }
   return 0;
 }
+
 
 int main(int argc, char **argv){
   int option = 0;
@@ -109,6 +159,7 @@ int main(int argc, char **argv){
     exit(1);
   }
 
+/*
   //addresse du sender
   struct addrinfo hints2, *res2;
   int err2;
@@ -122,18 +173,20 @@ int main(int argc, char **argv){
     fprintf(stderr, "getaddrinfo 2 error: %s\n", gai_strerror(err2));
     exit(1);
   }
+*/
 
-  //creation d'un socket en utilisant l'adresse du sender
-  if((fd=socket(res2->ai_family,res2->ai_socktype,res2->ai_protocol)) ==-1){
+  //creation d'un socket en utilisant l'adresse de receiver
+  if((fd=socket(res1->ai_family,res1->ai_socktype,res1->ai_protocol)) ==-1){
     fprintf(stderr, "socket error %s\n", gai_strerror(fd));
     exit(1);
   }
-
+/*
   //lier adresse du sender au socket du sender
   if (bind(fd, res2->ai_addr, res2->ai_addrlen)==-1) {
       fprintf(stderr, "bind error: %s\n",strerror(errno));
       return -1;
   }
+*/
 
   //connecte le socket à l'adresse du receiver
   if (connect(fd, res1->ai_addr, res1->ai_addrlen)==-1) {
@@ -144,9 +197,10 @@ int main(int argc, char **argv){
 //---------------------------------------------------------------------------- mettre segments dans liste chainée
   struct node* list = NULL;
   putInList(&list, filePresent, filename);
-  sendList(list);
+  sendItems(list, fd);
+  removeList(list);
   freeaddrinfo(res1);
-  freeaddrinfo(res2);
+  //freeaddrinfo(res2);
   close(fd);
 
   return 0;
