@@ -58,8 +58,6 @@ void test_pkt_tr(void) {
 
     CU_ASSERT(pkt_set_tr(pkt_test, 2) == E_TR);
     CU_ASSERT(pkt_get_tr(pkt_test) != 2);
-    CU_ASSERT(pkt_set_tr(pkt_test, -1) == E_TR);
-    CU_ASSERT(pkt_get_tr(pkt_test) != -1);
 
 
     pkt_del(pkt_test);
@@ -83,8 +81,6 @@ void test_pkt_window(void) {
 
     // Test des erreurs
 
-    CU_ASSERT(pkt_set_window(pkt_test, -1) == E_WINDOW);
-    CU_ASSERT(pkt_get_window(pkt_test) != -1);
     CU_ASSERT(pkt_set_window(pkt_test, 32) == E_WINDOW);
     CU_ASSERT(pkt_get_window(pkt_test) != 32);
 
@@ -106,14 +102,6 @@ void test_pkt_seqnum(void) {
     CU_ASSERT(pkt_set_seqnum(pkt_test, 255) == PKT_OK);
     CU_ASSERT(pkt_get_seqnum(pkt_test) == 255);
     CU_ASSERT(pkt_get_seqnum(pkt_test) == 255);
-
-
-    // Test des erreurs
-
-    CU_ASSERT(pkt_set_seqnum(pkt_test, -1) == E_SEQNUM);
-    CU_ASSERT(pkt_get_seqnum(pkt_test) != -1);
-    CU_ASSERT(pkt_set_seqnum(pkt_test, 256) == E_SEQNUM);
-    CU_ASSERT(pkt_get_seqnum(pkt_test) != 256);
 
 
     pkt_del(pkt_test);
@@ -138,8 +126,6 @@ void test_pkt_length(void) {
 
     // Test des erreurs
 
-    CU_ASSERT(pkt_set_length(pkt_test, -1) == E_LENGTH);
-    CU_ASSERT(pkt_get_length(pkt_test) != -1);
     CU_ASSERT(pkt_set_length(pkt_test, 513) == E_LENGTH);
     CU_ASSERT(pkt_get_length(pkt_test) != 513);
 
@@ -169,7 +155,7 @@ void test_pkt_payload(void) {
     //Test incohérence
 
     CU_ASSERT(pkt_set_payload(pkt_test,"abc", 4) == E_UNCONSISTENT);
-    
+
 
     pkt_del(pkt);
 }
