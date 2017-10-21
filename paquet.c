@@ -309,13 +309,8 @@ uint8_t  pkt_get_seqnum   (const pkt_t* r)
  */
 pkt_status_code pkt_set_seqnum   (pkt_t* r, const uint8_t seqnum)
 {
-  if(seqnum > 255 ){
-      return E_SEQNUM;
-  }
-  else{
     r->header->seqnum=seqnum;
     return PKT_OK;
-  }
 }
 
 /**
