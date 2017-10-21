@@ -263,7 +263,7 @@ uint8_t  pkt_get_tr       (const pkt_t* r)
  */
 pkt_status_code pkt_set_tr       (pkt_t* r, const uint8_t tr)
 {
-  if(tr > 1 || tr<0){
+  if(tr > 1 ){
     return E_TR;
   }
   r->header->tr=tr;
@@ -285,7 +285,7 @@ uint8_t  pkt_get_window   (const pkt_t* r)
  */
 pkt_status_code pkt_set_window   (pkt_t* r, const uint8_t window)
 {
-  if(window > MAX_WINDOW_SIZE || window<0){
+  if(window > MAX_WINDOW_SIZE ){
       return E_WINDOW;
   }
   else{
@@ -309,7 +309,7 @@ uint8_t  pkt_get_seqnum   (const pkt_t* r)
  */
 pkt_status_code pkt_set_seqnum   (pkt_t* r, const uint8_t seqnum)
 {
-  if(seqnum > 255 || seqnum<0){
+  if(seqnum > 255 ){
       return E_SEQNUM;
   }
   else{
@@ -333,7 +333,7 @@ uint16_t pkt_get_length   (const pkt_t* r)
  */
 pkt_status_code pkt_set_length   (pkt_t* r, const uint16_t length)
 {
-  if(length > 512 || length<0){
+  if(length > 512 ){
     return E_LENGTH;
   }
   r->header->length=length;
