@@ -164,6 +164,20 @@ void test_length() {
     pkt_del(pkt_test);
 }
 
+//test timestamp
+void test_timestamp() {
+
+    pkt_t * pkt_test = pkt_new();
+
+
+    CU_ASSERT(pkt_set_timestamp(pkt_test, 0) == PKT_OK);
+    CU_ASSERT(pkt_get_timestamp(pkt_test) == 0);
+    CU_ASSERT(pkt_get_timestamp(pkt_test) == 0);
+
+
+    pkt_del(pkt_test);
+}
+
 
 //test payload
 void test_payload() {
@@ -261,6 +275,7 @@ void main(int argc, const char *argv[])
         (NULL == CU_add_test(test, "window", test_window)) ||
         (NULL == CU_add_test(test, "seqnum", test_seqnum)) ||
         (NULL == CU_add_test(test, "length", test_length)) ||
+        (NULL == CU_add_test(test, "timestamp", test_timestamp)) ||
         (NULL == CU_add_test(test, "payload", test_payload)) ||
         (NULL == CU_add_test(test, "encode_decode", test_encode_decode)) ||
     )
