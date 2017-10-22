@@ -13,8 +13,33 @@
 
 
 
+
+//test création
+void test_new()
+{
+	  pkt_t * pkt_test = pkt_new();
+
+	  CU_ASSERT_PTR_NOT_NULL(pkt_test);
+    CU_ASSERT_PTR_NOT_NULL(pkt_test);
+
+	  pkt_del(pkt_test);
+}
+
+
+//test supression
+void test_del()
+{
+	pkt_t * pkt_test = pkt_new();
+
+	pkt_del(pkt_test);
+
+	CU_ASSERT_PTR_NULL(pkt_test);
+  CU_ASSERT_PTR_NULL(pkt_test);
+}
+
+
 //test type
-void test_type(void) {
+void test_type() {
 
     pkt_t * pkt_test = pkt_new();
 
@@ -44,7 +69,7 @@ void test_type(void) {
 }
 
 //test tr
-void test_tr(void) {
+void test_tr() {
 
     pkt_t * pkt_test = pkt_new();
 
@@ -69,7 +94,7 @@ void test_tr(void) {
 }
 
 //test window
-void test_window(void) {
+void test_window() {
 
     pkt_t * pkt_test = pkt_new();
 
@@ -93,8 +118,9 @@ void test_window(void) {
     pkt_del(pkt_test);
 }
 
+
 //test seqnum
-void test_seqnum(void) {
+void test_seqnum() {
 
     pkt_t * pkt_test = pkt_new();
 
@@ -114,7 +140,7 @@ void test_seqnum(void) {
 
 
 //test length
-void test_length(void) {
+void test_length() {
 
     pkt_t * pkt_test = pkt_new();
 
@@ -140,7 +166,7 @@ void test_length(void) {
 
 
 //test payload
-void test_payload(void) {
+void test_payload() {
 
     pkt_t * pkt_test = pkt_new();
 
@@ -167,7 +193,7 @@ void test_payload(void) {
 
 
 //test encode et decode
-void test_encode_decode(void) {
+void test_encode_decode() {
 
     pkt_t * pkt_test = pkt_new();
 
@@ -228,6 +254,8 @@ void main(int argc, const char *argv[])
 
 //ensemble des tests
     if      (
+        (NULL == CU_add_test(test, "new", test_new)) ||
+        (NULL == CU_add_test(test, "del", test_del)) ||
         (NULL == CU_add_test(test, "type", test_type)) ||
         (NULL == CU_add_test(test, "tr", test_tr)) ||
         (NULL == CU_add_test(test, "window", test_window)) ||
